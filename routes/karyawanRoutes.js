@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const authenticateToken = require("../middleware/authMiddleware");
+const authorizeAdmin = require("../middleware/authorizeAdmin");
 
 const {
   createKaryawan,
@@ -11,10 +12,14 @@ const {
   deleteKaryawan,
 } = require("../controllers/karyawanController");
 
-router.post("/", authenticateToken, createKaryawan);
-router.get("/", authenticateToken, getAllKaryawan);
-router.get("/:id", authenticateToken, getKaryawanById);
-router.put("/:id", authenticateToken, updateKaryawan);
-router.delete("/:id", authenticateToken, deleteKaryawan);
+router.post("/", authenticateToken, authorizeAdmin, createKaryawan);
+
+router.get("/", authenticateToken, authorizeAdmin, getAllKaryawan);
+
+router.get("/:id", authenticateToken, authorizeAdmin, getKaryawanById);
+
+router.put("/:id", authenticateToken, authorizeAdmin, updateKaryawan);
+
+router.delete("/:id", authenticateToken, authorizeAdmin, deleteKaryawan);
 
 module.exports = router;
