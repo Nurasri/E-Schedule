@@ -99,7 +99,38 @@ const login = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    if (req.user.role === "admin") {
+      const [rows] = await db.query(
+        "SELECT id_admin, nama, email FROM admin WHERE id_admin = ?",
+        [req.user.id],
+      );
+
+      return res.json(rows[0]);
+    }
+
+    const [rows] = await db.query(
+      `SELECT
+         id_karyawan,
+         nama_karyawan,
+         email,
+         jabatan
+       FROM karyawan
+       WHERE id_karyawan = ?`,
+      [req.user.id],
+    );
+
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerAdmin,
   login,
+  getProfile,
 };
