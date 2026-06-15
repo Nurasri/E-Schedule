@@ -9,11 +9,17 @@ const {
   getAllJadwal,
   getJadwalById,
   deleteJadwal,
+  getMyJadwal,
+  updateStatusTugas,
 } = require("../controllers/jadwalController");
 
 router.post("/", authenticateToken, authorizeAdmin, createJadwal);
 
 router.get("/", authenticateToken, authorizeAdmin, getAllJadwal);
+
+router.get("/saya", authenticateToken, getMyJadwal);
+
+router.patch("/:id/status", authenticateToken, updateStatusTugas);
 
 router.get("/:id", authenticateToken, authorizeAdmin, getJadwalById);
 

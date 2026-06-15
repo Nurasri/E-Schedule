@@ -144,9 +144,108 @@ const deleteJadwal = async (req, res) => {
   }
 };
 
+const getMyJadwal = async (req, res) => {
+  try {
+    // hanya karyawan
+    if (req.user.role !== "karyawan") {
+      return res.status(403).json({
+        message: "Fitur ini hanya untuk karyawan",
+      });
+    }
+
+    const [rows] = await db.query(
+      `
+            SELECT 
+                j.id_jadwal,
+                t.nama_tugas,
+                t.deskripsi,
+                t.prioritas,
+                t.deadline,
+                t.durasi,
+                j.tanggal_tugas,
+                j.jam_mulai,
+                j.jam_selesai,
+                j.status_tugas
+            FROM jadwal j
+            JOIN tugas t
+                ON j.id_tugas = t.id_tugas
+            WHERE j.id_karyawan = ?
+            ORDER BY j.tanggal_tugas ASC
+            `,
+      [req.user.id],
+    );
+
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+const updateStatusTugas = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status_tugas } = req.body;
+
+    // hanya karyawan
+    if (req.user.role !== "karyawan") {
+      return res.status(403).json({
+        message: "Fitur ini hanya untuk karyawan",
+      });
+    }
+
+    // Validasi status
+    const allowedStatus = ["Belum dikerjakan", "Proses", "Selesai", "Tertunda"];
+
+    if (!allowedStatus.includes(status_tugas)) {
+      return res.status(400).json({
+        message: "Status tugas tidak valid",
+      });
+    }
+
+    // pastikan jadwal milik karyawan yang login
+    const [jadwal] = await db.query(
+      `
+           SELECT *
+           FROM jadwal
+           WHERE id_jadwal = ?
+           AND id_karyawan = ? 
+            `,
+      [id, req.user.id],
+    );
+
+    if (jadwal.length === 0) {
+      return res.status(404).json({
+        message: "Jadwal tidak ditemukan atau bukan milik anda",
+      });
+    }
+
+    await db.query(
+      `
+            UPDATE jadwal
+            SET status_tugas = ?
+            WHERE id_jadwal = ?
+            `,
+      [status_tugas, id],
+    );
+
+    res.json({
+      message: "Status tugas berhasil diperbarui",
+      status_tugas,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createJadwal,
   getAllJadwal,
   getJadwalById,
   deleteJadwal,
+  getMyJadwal,
+  updateStatusTugas,
 };
