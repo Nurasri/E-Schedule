@@ -240,6 +240,19 @@ const deleteJadwal = async (req, res) => {
         [dataJadwal.id_karyawan],
       );
 
+      await db.query(
+        `UPDATE karyawan
+        SET status_ketersediaan = 
+          CASE 
+            WHEN jumlah_tugas >= maksimal_tugas
+            THEN 'Sibuk'
+            ELSE 'Tersedia'
+          END
+        WHERE id_karyawan = ?
+        `,
+        [dataJadwal.id_karyawan],
+      );
+
       // Ambil riwayat beban
       const [riwayat] = await db.query(
         `
