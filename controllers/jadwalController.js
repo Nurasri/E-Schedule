@@ -347,7 +347,7 @@ const updateStatusTugas = async (req, res) => {
     }
 
     // Validasi status
-    const allowedStatus = ["Belum dikerjakan", "Proses", "Selesai", "Tertunda"];
+    const allowedStatus = ["Belum Dikerjakan", "Proses", "Selesai", "Tertunda"];
 
     if (!allowedStatus.includes(status_tugas)) {
       return res.status(400).json({
@@ -368,6 +368,12 @@ const updateStatusTugas = async (req, res) => {
 
     const statusLama = jadwal[0].status_tugas;
 
+    if (statusLama === "Selesai" && status_tugas !== "Selesai") {
+      return res.status(400).json({
+        message: "Tugas yang sudah selesai tidak dapat diubah kembali",
+      });
+    }
+
     if (jadwal.length === 0) {
       return res.status(404).json({
         message: "Jadwal tidak ditemukan atau bukan milik anda",
@@ -384,6 +390,7 @@ const updateStatusTugas = async (req, res) => {
     );
 
     if (statusLama !== "Selesai" && status_tugas === "Selesai") {
+      // Jumlah tugas
       await db.query(
         `
         UPDATE karyawan
@@ -392,6 +399,56 @@ const updateStatusTugas = async (req, res) => {
         `,
         [req.user.id],
       );
+
+      // Status_ketersediaan
+      await db.query(
+        `
+        UPDATE karyawan
+        SET status_ketersediaan =
+          CASE
+            WHEN jumlah_tugas >= maksimal_tugas
+            THEN 'Sibuk'
+            ELSE 'Tersedia'
+          END
+        WHERE id_karyawan = ?
+        `,
+        [req.user.id],
+      );
+
+      // riwayat_beban
+      const [riwayat] = await db.query(
+        `
+        SELECT rb.*, k.maksimal_tugas
+        FROM riwayat_beban rb
+        JOIN karyawan k
+          ON rb.id_karyawan = k.id_karyawan
+        WHERE rb.id_karyawan = ?
+        `,
+        [req.user.id],
+      );
+
+      if (riwayat.length > 0) {
+        const data = riwayat[0];
+
+        const tugasAktifBaru = Math.max(data.tugas_aktif - 1, 0);
+
+        const tugasSelesaiBaru = data.tugas_selesai + 1;
+
+        const nilaiBebanBaru = (tugasAktifBaru / data.maksimal_tugas) * 100;
+
+        await db.query(
+          `
+          UPDATE riwayat_beban
+          SET
+            tugas_aktif = ?,
+            tugas_selesai = ?,
+            nilai_beban = ?,
+            tanggal_update = CURDATE()
+          WHERE id_karyawan = ?
+          `,
+          [tugasAktifBaru, tugasSelesaiBaru, nilaiBebanBaru, req.user.id],
+        );
+      }
     }
 
     res.json({
