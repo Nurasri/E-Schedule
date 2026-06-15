@@ -5,6 +5,7 @@ const db = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const karyawanRoutes = require("./routes/karyawanRoutes");
 const tugasRoutes = require("./routes/tugasRoutes");
+const jadwalRoutes = require("./routes/jadwalRoutes");
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/karyawan", karyawanRoutes);
 app.use("/tugas", tugasRoutes);
+app.use("/jadwal", jadwalRoutes);
 
 app.get("/", (req, res) => {
   res.json({
