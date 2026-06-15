@@ -18,6 +18,12 @@ const createJadwal = async (req, res) => {
       });
     }
 
+    if (karyawan[0].jumlah_tugas >= karyawan[0].maksimal_tugas) {
+      return res.status(400).json({
+        message: "Karyawan telah mencapai batas maksimal tugas",
+      });
+    }
+
     // cek tugas
     const [tugas] = await db.query("SELECT * FROM tugas WHERE id_tugas = ?", [
       id_tugas,
@@ -47,6 +53,20 @@ const createJadwal = async (req, res) => {
       `
       UPDATE karyawan
       SET jumlah_tugas = jumlah_tugas + 1
+      WHERE id_karyawan = ?
+      `,
+      [id_karyawan],
+    );
+
+    await db.query(
+      `
+      UPDATE karyawan
+      SET status_ketersediaan =
+        CASE
+          WHEN jumlah_tugas >= maksimal_tugas
+          THEN 'Sibuk'
+          ELSE 'Tersedia'
+        END
       WHERE id_karyawan = ?
       `,
       [id_karyawan],
