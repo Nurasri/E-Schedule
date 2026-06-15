@@ -52,6 +52,59 @@ const createJadwal = async (req, res) => {
       [id_karyawan],
     );
 
+    // Integrasi Riwayat Beban
+    const [riwayat] = await db.query(
+      `
+      SELECT * 
+      FROM riwayat_beban
+      WHERE id_karyawan = ?
+      `,
+      [id_karyawan],
+    );
+
+    if (riwayat.length === 0) {
+      const maksimal = karyawan[0].maksimal_tugas;
+
+      const nilaiBeban = (1 / maksimal) * 100;
+
+      await db.query(
+        `
+          INSERT INTO riwayat_beban (
+            id_karyawan,
+            total_tugas,
+            tugas_selesai,
+            tugas_aktif,
+            nilai_beban,
+            tanggal_update
+          )
+          VALUES (?, ?, ?, ?, ?, CURDATE())
+          `,
+        [id_karyawan, 1, 0, 1, nilaiBeban],
+      );
+    } else {
+      const data = riwayat[0];
+
+      const total = data.total_tugas + 1;
+      const aktif = data.tugas_aktif + 1;
+
+      const maksimal = karyawan[0].maksimal_tugas;
+
+      const nilai = (aktif / maksimal) * 100;
+
+      await db.query(
+        `
+        UPDATE riwayat_beban
+        SET
+          total_tugas = ?,
+          tugas_aktif = ?,
+          nilai_beban = ?,
+          tanggal_update = CURDATE()
+        WHERE id_karyawan = ?
+        `,
+        [total, aktif, nilai, id_karyawan],
+      );
+    }
+
     res.status(201).json({
       message: "Jadwal berhasil dibuat",
       id_jadwal: result.insertId,
@@ -133,14 +186,70 @@ const deleteJadwal = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query("DELETE FROM jadwal WHERE id_jadwal = ?", [
-      id,
-    ]);
+    // Ambil data jadwal yang akan dihapus
+    const [jadwal] = await db.query(
+      `
+      SELECT j.*, k.maksimal_tugas
+      FROM jadwal j
+      JOIN karyawan k
+        ON j.id_karyawan = k.id_karyawan
+      WHERE j.id_jadwal = ?
+      `,
+      [id],
+    );
 
-    if (result.affectedRows === 0) {
+    if (jadwal.length === 0) {
       return res.status(404).json({
         message: "Jadwal tidak ditemukan",
       });
+    }
+
+    const dataJadwal = jadwal[0];
+
+    // Hapus jadwal
+    await db.query("DELETE FROM jadwal WHERE id_jadwal = ?", [id]);
+
+    // Jika tugas belum selesai
+    if (dataJadwal.status_tugas !== "Selesai") {
+      // Kurangi jumlah_tugas
+      await db.query(
+        `UPDATE karyawan
+        SET jumlah_tugas = jumlah_tugas - 1
+        WHERE id_karyawan = ?
+        `,
+        [dataJadwal.id_karyawan],
+      );
+
+      // Ambil riwayat beban
+      const [riwayat] = await db.query(
+        `
+        SELECT * 
+        FROM riwayat_beban
+        WHERE id_karyawan = ?
+        `,
+        [dataJadwal.id_karyawan],
+      );
+
+      if (riwayat.length > 0) {
+        const dataRiwayat = riwayat[0];
+
+        const tugasAktifBaru = Math.max(dataRiwayat.tugas_aktif - 1, 0);
+
+        const nilaiBebanBaru =
+          (tugasAktifBaru / dataJadwal.maksimal_tugas) * 100;
+
+        await db.query(
+          `
+          UPDATE riwayat_beban
+          SET
+            tugas_aktif = ?,
+            nilai_beban = ?,
+            tanggal_update = CURDATE()
+          WHERE id_karyawan = ?
+          `,
+          [tugasAktifBaru, nilaiBebanBaru, dataJadwal.id_karyawan],
+        );
+      }
     }
 
     res.json({
