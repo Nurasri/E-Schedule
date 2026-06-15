@@ -43,6 +43,15 @@ const createJadwal = async (req, res) => {
       [id_karyawan, id_tugas, tanggal_tugas, jam_mulai, jam_selesai],
     );
 
+    await db.query(
+      `
+      UPDATE karyawan
+      SET jumlah_tugas = jumlah_tugas + 1
+      WHERE id_karyawan = ?
+      `,
+      [id_karyawan],
+    );
+
     res.status(201).json({
       message: "Jadwal berhasil dibuat",
       id_jadwal: result.insertId,
@@ -215,6 +224,8 @@ const updateStatusTugas = async (req, res) => {
       [id, req.user.id],
     );
 
+    const statusLama = jadwal[0].status_tugas;
+
     if (jadwal.length === 0) {
       return res.status(404).json({
         message: "Jadwal tidak ditemukan atau bukan milik anda",
@@ -229,6 +240,17 @@ const updateStatusTugas = async (req, res) => {
             `,
       [status_tugas, id],
     );
+
+    if (statusLama !== "Selesai" && status_tugas === "Selesai") {
+      await db.query(
+        `
+        UPDATE karyawan
+        SET jumlah_tugas = jumlah_tugas - 1
+        WHERE id_karyawan = ?
+        `,
+        [req.user.id],
+      );
+    }
 
     res.json({
       message: "Status tugas berhasil diperbarui",
