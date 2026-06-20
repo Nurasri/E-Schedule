@@ -1,8 +1,19 @@
 const express = require("express");
+
 const router = express.Router();
 
-const { generateJadwal } = require("../controllers/generateController");
+const { generateSchedule } = require("../controllers/generateController");
 
-router.post("/generate", generateJadwal);
+/*
+  Endpoint Generate Jadwal Greedy
+
+  POST /api/jadwal/generate
+*/
+
+// Hanya admin yang dapat generate
+const authenticateToken = require("../middleware/authMiddleware");
+const authorizeAdmin = require("../middleware/authorizeAdmin");
+
+router.post("/generate", authenticateToken, authorizeAdmin, generateSchedule);
 
 module.exports = router;
