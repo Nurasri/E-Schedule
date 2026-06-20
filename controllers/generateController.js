@@ -1,70 +1,42 @@
-const { generateGreedySchedule } = require("../services/greedyService");
-
 const { processBacktracking } = require("../services/backtrackingService");
 
 /*
 =================================================
-PREVIEW GREEDY
-Tidak menyimpan ke database
-=================================================
-*/
-
-async function generateGreedy(req, res) {
-  try {
-    const hasil = await generateGreedySchedule();
-
-    return res.status(200).json({
-      success: true,
-      algoritma: "Greedy",
-      message: "Generate preview Greedy berhasil",
-      total_tugas: hasil.total_tugas,
-      berhasil: hasil.berhasil,
-      gagal: hasil.gagal,
-      data: hasil.hasil,
-    });
-  } catch (error) {
-    console.error("Generate Greedy Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Terjadi kesalahan saat generate Greedy",
-      error: error.message,
-    });
-  }
-}
-
-/*
-=================================================
-GENERATE FINAL
+GENERATE JADWAL OTOMATIS
 Greedy + Backtracking
 =================================================
+
+Alur:
+1. Greedy menghasilkan solusi awal.
+2. Backtracking memvalidasi constraint.
+3. Backtracking mencari alternatif jika diperlukan.
+4. Jadwal valid disimpan ke database.
 */
 
-async function generateFinal(req, res) {
+async function generateSchedule(req, res) {
   try {
     const hasil = await processBacktracking();
 
     return res.status(200).json({
       success: true,
       algoritma: "Greedy + Backtracking",
-      message: "Generate jadwal final berhasil",
+      message: "Generate jadwal berhasil",
       total_tugas: hasil.total_tugas,
       berhasil: hasil.berhasil,
       gagal: hasil.gagal,
       data: hasil.hasil,
     });
   } catch (error) {
-    console.error("Generate Final Error:", error);
+    console.error("Generate Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Terjadi kesalahan saat generate final",
+      message: "Terjadi kesalahan saat generate jadwal",
       error: error.message,
     });
   }
 }
 
 module.exports = {
-  generateGreedy,
-  generateFinal,
+  generateSchedule,
 };

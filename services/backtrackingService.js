@@ -410,7 +410,37 @@ async function processBacktracking() {
         Jika Greedy gagal
       */
       if (item.status_generate === "GAGAL") {
-        hasilFinal.push(item);
+        const alternatif = await findAlternativeCandidate(
+          item,
+          null,
+          workloadMap,
+          scheduleMap,
+        );
+
+        if (!alternatif) {
+          hasilFinal.push({
+            ...item,
+            metode: "Backtracking",
+            alasan: "Tidak ditemukan kandidat alternatif",
+          });
+
+          continue;
+        }
+
+        const hasilAlternatif = {
+          ...item,
+          id_karyawan: alternatif.id_karyawan,
+          nama_karyawan: alternatif.nama_karyawan,
+          score: alternatif.score,
+          status_generate: "BERHASIL",
+        };
+
+        await saveSchedule(connection, hasilAlternatif, workloadMap);
+
+        hasilFinal.push({
+          ...hasilAlternatif,
+          metode: "Backtracking",
+        });
 
         continue;
       }

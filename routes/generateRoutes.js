@@ -6,39 +6,27 @@ const authenticateToken = require("../middleware/authMiddleware");
 
 const authorizeAdmin = require("../middleware/authorizeAdmin");
 
-const {
-  generateGreedy,
-  generateFinal,
-} = require("../controllers/generateController");
+const { generateSchedule } = require("../controllers/generateController");
 
 /*
 =================================================
-GREEDY PREVIEW
+GENERATE JADWAL OTOMATIS
 =================================================
 
-POST /jadwal/generate-greedy
+POST /jadwal/generate
+
+Flow:
+Greedy
+↓
+Backtracking
+↓
+Simpan Database
+↓
+Return hasil final
+
+Hanya dapat diakses oleh Admin.
 */
 
-router.post(
-  "/generate-greedy",
-  authenticateToken,
-  authorizeAdmin,
-  generateGreedy,
-);
-
-/*
-=================================================
-FINAL GENERATE
-=================================================
-
-POST /jadwal/generate-final
-*/
-
-router.post(
-  "/generate-final",
-  authenticateToken,
-  authorizeAdmin,
-  generateFinal,
-);
+router.post("/generate", authenticateToken, authorizeAdmin, generateSchedule);
 
 module.exports = router;
