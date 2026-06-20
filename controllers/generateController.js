@@ -27,7 +27,7 @@ async function generateSchedule(req, res) {
       data: hasil.hasil,
     });
   } catch (error) {
-    console.error("Generate Error:", error);
+    console.error(error.stack);
 
     return res.status(500).json({
       success: false,

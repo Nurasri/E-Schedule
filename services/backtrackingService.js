@@ -64,8 +64,9 @@ VALIDASI CONSTRAINT
 */
 
 async function validateConstraint(
+  connection,
   kandidat,
-  tugas,
+  item,
   workloadMap,
   scheduleMap = new Map(),
 ) {
@@ -92,21 +93,51 @@ async function validateConstraint(
 
   /*
   Constraint 3
-
   Ji ∩ Jj = ∅
 */
 
-  const jadwalLama = scheduleMap.get(kandidat.id_karyawan) || [];
+  /*
+  Cari slot terlebih dahulu
+*/
+  const slot = await findAvailableSlot(
+    connection,
+    kandidat.id_karyawan,
+    item.deadline,
+    item.durasi,
+  );
+
+  if (!slot) {
+    return false;
+  }
+
+  /*
+  Ambil jadwal lama pada tanggal yang sama
+*/
+  const [jadwalRows] = await connection.query(
+    `
+    SELECT jam_mulai, jam_selesai
+    FROM jadwal
+    WHERE id_karyawan = ?
+      AND tanggal_tugas = ?
+  `,
+    [kandidat.id_karyawan, item.deadline],
+  );
 
   const konflik = checkTimeConflict(
-    tugas.jam_mulai,
-    tugas.jam_selesai,
-    jadwalLama,
+    slot.jam_mulai,
+    slot.jam_selesai,
+    jadwalRows,
   );
 
   if (konflik) {
     return false;
   }
+
+  /*
+  Simpan slot ke item
+*/
+  item.jam_mulai = slot.jam_mulai;
+  item.jam_selesai = slot.jam_selesai;
 
   return true;
 }
@@ -122,6 +153,7 @@ MENCARI KANDIDAT ALTERNATIF
 */
 
 async function findAlternativeCandidate(
+  connection,
   tugas,
   kandidatAwal,
   workloadMap,
@@ -152,6 +184,7 @@ async function findAlternativeCandidate(
       Validasi constraint
     */
     const isValid = await validateConstraint(
+      connection,
       kandidat,
       tugas,
       workloadMap,
@@ -218,43 +251,42 @@ async function saveSchedule(connection, hasilPenjadwalan, workloadMap) {
   /*
     Simpan ke tabel jadwal
   */
+
+  //   const slot = await findAvailableSlot(
+  //     connection,
+  //     hasilPenjadwalan.id_karyawan,
+  //     hasilPenjadwalan.deadline,
+  //     hasilPenjadwalan.durasi,
+  //   );
+
+  //   if (!slot) {
+  //     throw new Error("Slot waktu tidak ditemukan");
+  //   }
+
   await connection.query(
     `
-      INSERT INTO jadwal (
-        id_karyawan,
-        id_tugas,
-        tanggal_tugas,
-        jam_mulai,
-        jam_selesai,
-        status_tugas,
-        score_greedy,
-        hasil_validasi,
-        metode_penjadwalan
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
+    INSERT INTO jadwal (
+      id_karyawan,
+      id_tugas,
+      tanggal_tugas,
+      jam_mulai,
+      jam_selesai,
+      status_tugas,
+      score_greedy,
+      hasil_validasi,
+      metode_penjadwalan
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `,
     [
       hasilPenjadwalan.id_karyawan,
       hasilPenjadwalan.id_tugas,
-
-      /*
-        PROJECT MODE:
-        tanggal tugas menggunakan deadline.
-      */
       hasilPenjadwalan.deadline,
-
-      /*
-        Belum digunakan pada PROJECT MODE.
-      */
-      null,
-      null,
-
+      hasilPenjadwalan.jam_mulai,
+      hasilPenjadwalan.jam_selesai,
       "Belum Dikerjakan",
-
       hasilPenjadwalan.score,
-
       "Valid",
-
       "Greedy-Bactracking",
     ],
   );
@@ -271,6 +303,19 @@ async function saveSchedule(connection, hasilPenjadwalan, workloadMap) {
     [hasilPenjadwalan.id_karyawan],
   );
 
+  await connection.query(
+    `
+  UPDATE karyawan
+  SET status_ketersediaan = 
+    CASE 
+    WHEN jumlah_tugas >= maksimal_tugas
+        THEN 'Sibuk'
+        ELSE 'Tersedia'
+    END
+    WHERE id_karyawan = ?
+`,
+    [hasilPenjadwalan.id_karyawan],
+  );
   /*
     Update workload sementara
   */
@@ -346,6 +391,77 @@ PROSES UTAMA BACKTRACKING
 7. Menyimpan jadwal valid
 */
 
+async function findAvailableSlot(connection, idKaryawan, tanggalTugas, durasi) {
+  const {
+    parseDurasi,
+    timeToMinutes,
+    minutesToTime,
+  } = require("../helpers/timeSlotHelper");
+
+  /*
+    Jam kerja perusahaan:
+    08:00 - 17:00
+  */
+
+  const START_DAY = timeToMinutes("08:00");
+  const END_DAY = timeToMinutes("17:00");
+
+  const durasiMenit = parseDurasi(durasi) * 60;
+
+  /*
+    Ambil jadwal karyawan pada hari tersebut
+  */
+
+  const [jadwalRows] = await connection.query(
+    `
+      SELECT jam_mulai, jam_selesai
+      FROM jadwal
+      WHERE id_karyawan = ?
+        AND tanggal_tugas = ?
+      ORDER BY jam_mulai
+    `,
+    [idKaryawan, tanggalTugas],
+  );
+
+  let currentStart = START_DAY;
+
+  for (const jadwal of jadwalRows) {
+    const existingStart = timeToMinutes(
+      jadwal.jam_mulai.toString().slice(0, 5),
+    );
+
+    const existingEnd = timeToMinutes(
+      jadwal.jam_selesai.toString().slice(0, 5),
+    );
+
+    /*
+      Ada slot kosong sebelum jadwal berikutnya
+    */
+
+    if (currentStart + durasiMenit <= existingStart) {
+      return {
+        jam_mulai: minutesToTime(currentStart),
+        jam_selesai: minutesToTime(currentStart + durasiMenit),
+      };
+    }
+
+    currentStart = existingEnd;
+  }
+
+  /*
+    Cek slot terakhir
+  */
+
+  if (currentStart + durasiMenit <= END_DAY) {
+    return {
+      jam_mulai: minutesToTime(currentStart),
+      jam_selesai: minutesToTime(currentStart + durasiMenit),
+    };
+  }
+
+  return null;
+}
+
 async function processBacktracking() {
   /*
     STEP 1
@@ -411,6 +527,7 @@ async function processBacktracking() {
       */
       if (item.status_generate === "GAGAL") {
         const alternatif = await findAlternativeCandidate(
+          connection,
           item,
           null,
           workloadMap,
@@ -464,6 +581,7 @@ async function processBacktracking() {
         Validasi constraint
       */
       const valid = await validateConstraint(
+        connection,
         kandidatGreedy,
         item,
         workloadMap,
@@ -490,6 +608,7 @@ async function processBacktracking() {
         Cari kandidat alternatif
       */
       const alternatif = await findAlternativeCandidate(
+        connection,
         item,
         kandidatGreedy,
         workloadMap,
