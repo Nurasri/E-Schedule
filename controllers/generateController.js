@@ -1,12 +1,22 @@
 const { generateGreedySchedule } = require("../services/greedyService");
 
-async function generateSchedule(req, res) {
+const { processBacktracking } = require("../services/backtrackingService");
+
+/*
+=================================================
+PREVIEW GREEDY
+Tidak menyimpan ke database
+=================================================
+*/
+
+async function generateGreedy(req, res) {
   try {
     const hasil = await generateGreedySchedule();
 
     return res.status(200).json({
       success: true,
-      message: "Generate jadwal Greedy berhasil",
+      algoritma: "Greedy",
+      message: "Generate preview Greedy berhasil",
       total_tugas: hasil.total_tugas,
       berhasil: hasil.berhasil,
       gagal: hasil.gagal,
@@ -17,12 +27,44 @@ async function generateSchedule(req, res) {
 
     return res.status(500).json({
       success: false,
-      message: "Terjadi kesalahan saat generate jadwal Greedy",
+      message: "Terjadi kesalahan saat generate Greedy",
+      error: error.message,
+    });
+  }
+}
+
+/*
+=================================================
+GENERATE FINAL
+Greedy + Backtracking
+=================================================
+*/
+
+async function generateFinal(req, res) {
+  try {
+    const hasil = await processBacktracking();
+
+    return res.status(200).json({
+      success: true,
+      algoritma: "Greedy + Backtracking",
+      message: "Generate jadwal final berhasil",
+      total_tugas: hasil.total_tugas,
+      berhasil: hasil.berhasil,
+      gagal: hasil.gagal,
+      data: hasil.hasil,
+    });
+  } catch (error) {
+    console.error("Generate Final Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan saat generate final",
       error: error.message,
     });
   }
 }
 
 module.exports = {
-  generateSchedule,
+  generateGreedy,
+  generateFinal,
 };
