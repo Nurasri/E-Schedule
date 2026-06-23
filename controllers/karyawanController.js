@@ -138,6 +138,7 @@ const updateKaryawan = async (req, res) => {
       no_hp,
       skill,
       status_ketersediaan,
+      jumlah_tugas,
       maksimal_tugas,
     } = req.body;
 
@@ -151,6 +152,7 @@ const updateKaryawan = async (req, res) => {
                 no_hp = ?,
                 skill = ?,
                 status_ketersediaan = ?,
+                jumlah_tugas = ?,
                 maksimal_tugas = ?
             WHERE id_karyawan = ?
             `,
@@ -161,6 +163,7 @@ const updateKaryawan = async (req, res) => {
         no_hp,
         skill,
         status_ketersediaan,
+        jumlah_tugas,
         maksimal_tugas,
         id,
       ],

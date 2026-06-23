@@ -10,7 +10,6 @@ const createTugas = async (req, res) => {
       skill_dibutuhkan,
       deadline,
       durasi,
-      catatan_tugas,
     } = req.body;
 
     await db.query(
@@ -21,20 +20,11 @@ const createTugas = async (req, res) => {
         prioritas,
         skill_dibutuhkan,
         deadline,
-        durasi,
-        catatan_tugas
+        durasi
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?)
       `,
-      [
-        nama_tugas,
-        deskripsi,
-        prioritas,
-        skill_dibutuhkan,
-        deadline,
-        durasi,
-        catatan_tugas,
-      ],
+      [nama_tugas, deskripsi, prioritas, skill_dibutuhkan, deadline, durasi],
     );
 
     res.status(201).json({
