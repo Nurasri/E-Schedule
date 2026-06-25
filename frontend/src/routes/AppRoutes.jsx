@@ -1,11 +1,16 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "../pages/Login";
+
 import Dashboard from "../pages/Dashboard";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
+
 import Karyawan from "../pages/Karyawan";
+import TambahKaryawan from "../pages/TambahKaryawan";
+import EditKaryawan from "../pages/EditKaryawan";
+
 import Tugas from "../pages/Tugas";
 import Jadwal from "../pages/Jadwal";
 import RiwayatBeban from "../pages/RiwayatBeban";
@@ -28,6 +33,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/karyawan"
           element={
@@ -38,6 +44,28 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/karyawan/tambah"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <TambahKaryawan />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/karyawan/edit/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <EditKaryawan />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/tugas"
           element={
@@ -48,6 +76,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/jadwal"
           element={
@@ -58,6 +87,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/riwayatbeban"
           element={
