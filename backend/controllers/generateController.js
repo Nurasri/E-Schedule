@@ -1,3 +1,4 @@
+const db = require("../config/db");
 const { processBacktracking } = require("../services/backtrackingService");
 
 /*
@@ -15,6 +16,43 @@ Alur:
 
 async function generateSchedule(req, res) {
   try {
+    // ==========================
+    // CEK KARYAWAN TERSEDIA
+    // ==========================
+
+    const [karyawan] = await db.query(`
+  SELECT *
+  FROM karyawan
+  WHERE status_ketersediaan = 'Tersedia'
+`);
+
+    if (karyawan.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Tidak ada karyawan tersedia",
+      });
+    }
+
+    // ==========================
+    // CEK TUGAS BELUM DIJADWALKAN
+    // ==========================
+
+    const [tugas] = await db.query(`
+  SELECT t.*
+  FROM tugas t
+  LEFT JOIN jadwal j
+    ON t.id_tugas = j.id_tugas
+  WHERE j.id_tugas IS NULL
+`);
+
+    if (tugas.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Semua tugas sudah dijadwalkan",
+      });
+    }
+
+    // Proses Generate
     const hasil = await processBacktracking();
 
     return res.status(200).json({
