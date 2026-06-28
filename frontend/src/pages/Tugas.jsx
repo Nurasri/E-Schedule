@@ -105,7 +105,7 @@ function Tugas() {
                       </td>
                       <td>{item.prioritas}</td>
                       {/* <td>{item.skill_dibutuhkan}</td> */}
-                      <td>{new Date(item.deadline).toLocaleDateString()}</td>
+                      <td>{item.deadline}</td>
                       {/* <td>{item.durasi}</td> */}
 
                       <td>

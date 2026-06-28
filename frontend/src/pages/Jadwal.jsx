@@ -146,15 +146,14 @@ function Jadwal() {
           </div>
 
           <div className="table-responsive">
-            <table className="table table-bordered table-hover">
+            <table className="table table-bordered table-hover text-center">
               <thead className="table-dark">
                 <tr>
                   <th>No</th>
                   <th>Nama Karyawan</th>
                   <th>Tugas</th>
                   <th>Tanggal</th>
-                  <th>Jam Mulai</th>
-                  <th>Jam Selesai</th>
+                  <th>Waktu Pengerjaan/Hari</th>
                   <th>Status</th>
                   <th>Aksi</th>
                 </tr>
@@ -171,9 +170,11 @@ function Jadwal() {
 
                     <td>{item.tanggal_tugas?.split("T")[0]}</td>
 
-                    <td>{item.jam_mulai}</td>
+                    <td>
+                      {item.jam_mulai} - {item.jam_selesai}
+                    </td>
 
-                    <td>{item.jam_selesai}</td>
+                    {/* <td>{item.jam_selesai}</td> */}
 
                     <td>{item.status_tugas}</td>
 
@@ -199,6 +200,16 @@ function Jadwal() {
 
           <nav>
             <ul className="pagination">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                >
+                  Previous
+                </button>
+              </li>
               {[...Array(totalPages)].map((_, index) => (
                 <li
                   key={index}
@@ -214,6 +225,18 @@ function Jadwal() {
                   </button>
                 </li>
               ))}
+              <li
+                className={`page-item ${
+                  currentPage === totalPages ? "disabled" : ""
+                }`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                >
+                  Next
+                </button>
+              </li>
             </ul>
           </nav>
         </div>
