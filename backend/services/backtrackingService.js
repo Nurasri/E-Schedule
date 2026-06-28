@@ -4,6 +4,25 @@ const { generateGreedySchedule } = require("./greedyService");
 
 const { calculateGreedyScore } = require("../helpers/scoringHelpers");
 
+// /*
+// =================================================
+// HITUNG TANGGAL MULAI PEKERJAAN
+
+// Project ini mengasumsikan bahwa seluruh tugas
+// mulai dikerjakan 7 hari sebelum deadline.
+
+// tanggal_mulai = deadline - 7 hari
+// =================================================
+// */
+
+// function getStartDate(deadline) {
+//   const startDate = new Date(deadline);
+
+//   startDate.setDate(startDate.getDate() - 7);
+
+//   return startDate.toISOString().slice(0, 10);
+// }
+
 /*
 =================================================
 CEK KONFLIK WAKTU
@@ -99,10 +118,17 @@ async function validateConstraint(
   /*
   Cari slot terlebih dahulu
 */
+
+  // const tanggalMulai = getStartDate(item.deadline);
+  const tanggalGenerate = new Date().toISOString().slice(0, 10);
+
   const slot = await findAvailableSlot(
     connection,
     kandidat.id_karyawan,
+    new Date(),
+
     item.deadline,
+
     item.durasi,
   );
 
@@ -120,7 +146,7 @@ async function validateConstraint(
     WHERE id_karyawan = ?
       AND tanggal_tugas = ?
   `,
-    [kandidat.id_karyawan, item.deadline],
+    [kandidat.id_karyawan, slot.tanggal_tugas],
   );
 
   const konflik = checkTimeConflict(
@@ -136,6 +162,7 @@ async function validateConstraint(
   /*
   Simpan slot ke item
 */
+  item.tanggal_tugas = slot.tanggal_tugas;
   item.jam_mulai = slot.jam_mulai;
   item.jam_selesai = slot.jam_selesai;
 
@@ -232,6 +259,12 @@ async function findAlternativeCandidate(
         ...kandidat,
 
         score,
+
+        tanggal_tugas: tugas.tanggal_tugas,
+
+        jam_mulai: tugas.jam_mulai,
+
+        jam_selesai: tugas.jam_selesai,
       };
     }
   }
@@ -281,10 +314,14 @@ async function saveSchedule(connection, hasilPenjadwalan, workloadMap) {
     [
       hasilPenjadwalan.id_karyawan,
       hasilPenjadwalan.id_tugas,
-      hasilPenjadwalan.deadline,
+
+      hasilPenjadwalan.tanggal_tugas,
+
       hasilPenjadwalan.jam_mulai,
       hasilPenjadwalan.jam_selesai,
+
       "Belum Dikerjakan",
+
       hasilPenjadwalan.score,
       "Valid",
       "Greedy-Bactracking",
@@ -391,17 +428,18 @@ PROSES UTAMA BACKTRACKING
 7. Menyimpan jadwal valid
 */
 
-async function findAvailableSlot(connection, idKaryawan, tanggalTugas, durasi) {
+async function findAvailableSlot(
+  connection,
+  idKaryawan,
+  tanggalMulai,
+  deadline,
+  durasi,
+) {
   const {
     parseDurasi,
     timeToMinutes,
     minutesToTime,
   } = require("../helpers/timeSlotHelper");
-
-  /*
-    Jam kerja perusahaan:
-    08:00 - 17:00
-  */
 
   const START_DAY = timeToMinutes("08:00");
   const END_DAY = timeToMinutes("17:00");
@@ -409,54 +447,60 @@ async function findAvailableSlot(connection, idKaryawan, tanggalTugas, durasi) {
   const durasiMenit = parseDurasi(durasi) * 60;
 
   /*
-    Ambil jadwal karyawan pada hari tersebut
+      Mulai dari tanggal generate
   */
+  let currentDate = new Date(tanggalMulai);
 
-  const [jadwalRows] = await connection.query(
-    `
+  const endDate = new Date(deadline);
+
+  while (currentDate <= endDate) {
+    const tanggal = currentDate.toISOString().split("T")[0];
+
+    const [jadwalRows] = await connection.query(
+      `
       SELECT jam_mulai, jam_selesai
       FROM jadwal
       WHERE id_karyawan = ?
         AND tanggal_tugas = ?
       ORDER BY jam_mulai
-    `,
-    [idKaryawan, tanggalTugas],
-  );
-
-  let currentStart = START_DAY;
-
-  for (const jadwal of jadwalRows) {
-    const existingStart = timeToMinutes(
-      jadwal.jam_mulai.toString().slice(0, 5),
+      `,
+      [idKaryawan, tanggal],
     );
 
-    const existingEnd = timeToMinutes(
-      jadwal.jam_selesai.toString().slice(0, 5),
-    );
+    let currentStart = START_DAY;
 
-    /*
-      Ada slot kosong sebelum jadwal berikutnya
-    */
+    for (const jadwal of jadwalRows) {
+      const existingStart = timeToMinutes(
+        jadwal.jam_mulai.toString().slice(0, 5),
+      );
 
-    if (currentStart + durasiMenit <= existingStart) {
+      const existingEnd = timeToMinutes(
+        jadwal.jam_selesai.toString().slice(0, 5),
+      );
+
+      if (currentStart + durasiMenit <= existingStart) {
+        return {
+          tanggal_tugas: tanggal,
+          jam_mulai: minutesToTime(currentStart),
+          jam_selesai: minutesToTime(currentStart + durasiMenit),
+        };
+      }
+
+      currentStart = existingEnd;
+    }
+
+    if (currentStart + durasiMenit <= END_DAY) {
       return {
+        tanggal_tugas: tanggal,
         jam_mulai: minutesToTime(currentStart),
         jam_selesai: minutesToTime(currentStart + durasiMenit),
       };
     }
 
-    currentStart = existingEnd;
-  }
-
-  /*
-    Cek slot terakhir
-  */
-
-  if (currentStart + durasiMenit <= END_DAY) {
-    return {
-      jam_mulai: minutesToTime(currentStart),
-      jam_selesai: minutesToTime(currentStart + durasiMenit),
-    };
+    /*
+        Hari berikutnya
+    */
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return null;
@@ -546,9 +590,19 @@ async function processBacktracking() {
 
         const hasilAlternatif = {
           ...item,
+
           id_karyawan: alternatif.id_karyawan,
+
           nama_karyawan: alternatif.nama_karyawan,
+
           score: alternatif.score,
+
+          tanggal_tugas: alternatif.tanggal_tugas,
+
+          jam_mulai: alternatif.jam_mulai,
+
+          jam_selesai: alternatif.jam_selesai,
+
           status_generate: "BERHASIL",
         };
 
@@ -644,6 +698,12 @@ async function processBacktracking() {
         nama_karyawan: alternatif.nama_karyawan,
 
         score: alternatif.score,
+
+        tanggal_tugas: alternatif.tanggal_tugas,
+
+        jam_mulai: alternatif.jam_mulai,
+
+        jam_selesai: alternatif.jam_selesai,
 
         status_generate: "BERHASIL",
       };

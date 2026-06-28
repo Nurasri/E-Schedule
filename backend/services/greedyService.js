@@ -92,8 +92,20 @@ async function generateGreedySchedule() {
         Proses setiap tugas
     */
   for (const tugas of tugasList) {
+    /*
+    Kandidat terbaik sementara
+*/
     let kandidatTerbaik = null;
-    let scoreTertinggi = -Infinity;
+
+    /*
+    Score terbaik sementara
+*/
+    let scoreTerbaik = -Infinity;
+
+    /*
+    Beban kerja terbaik sementara
+*/
+    let bebanTerendah = Infinity;
 
     /*
             Cari kandidat terbaik
@@ -126,9 +138,44 @@ async function generateGreedySchedule() {
       /*
                 Pilih score tertinggi
             */
-      if (score > scoreTertinggi) {
-        scoreTertinggi = score;
+      /*
+    PRIORITAS 1
+    Pilih karyawan dengan beban kerja paling rendah
+*/
+      if (bebanSementara < bebanTerendah) {
+        bebanTerendah = bebanSementara;
 
+        scoreTerbaik = score;
+
+        kandidatTerbaik = karyawan;
+
+        continue;
+      }
+
+      /*
+    PRIORITAS 2
+    Jika beban sama,
+    pilih score Greedy terbesar
+*/
+      if (bebanSementara === bebanTerendah && score > scoreTerbaik) {
+        scoreTerbaik = score;
+
+        kandidatTerbaik = karyawan;
+
+        continue;
+      }
+
+      /*
+    PRIORITAS 3
+    Jika score juga sama,
+    pilih ID karyawan paling kecil
+*/
+      if (
+        bebanSementara === bebanTerendah &&
+        score === scoreTerbaik &&
+        kandidatTerbaik &&
+        karyawan.id_karyawan < kandidatTerbaik.id_karyawan
+      ) {
         kandidatTerbaik = karyawan;
       }
     }
@@ -169,13 +216,19 @@ async function generateGreedySchedule() {
 
       deadline: tugas.deadline,
 
+      /*
+        default
+        nanti Backtracking boleh memindahkan
+    */
+      tanggal_tugas: tugas.deadline,
+
       durasi: tugas.durasi,
 
       id_karyawan: kandidatTerbaik.id_karyawan,
 
       nama_karyawan: kandidatTerbaik.nama_karyawan,
 
-      score: scoreTertinggi,
+      score: scoreTerbaik,
 
       status_generate: "BERHASIL",
     });
