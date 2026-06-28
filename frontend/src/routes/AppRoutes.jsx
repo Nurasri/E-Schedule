@@ -12,7 +12,11 @@ import TambahKaryawan from "../pages/TambahKaryawan";
 import EditKaryawan from "../pages/EditKaryawan";
 
 import Tugas from "../pages/Tugas";
+import TambahTugas from "../pages/TambahTugas";
+import EditTugas from "../pages/EditTugas";
+
 import Jadwal from "../pages/Jadwal";
+
 import RiwayatBeban from "../pages/RiwayatBeban";
 
 function AppRoutes() {
@@ -72,6 +76,27 @@ function AppRoutes() {
             <ProtectedRoute>
               <DashboardLayout>
                 <Tugas />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tugas/tambah"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <TambahTugas />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tugas/edit/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <EditTugas />
               </DashboardLayout>
             </ProtectedRoute>
           }

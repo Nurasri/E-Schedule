@@ -79,9 +79,9 @@ function Karyawan() {
                 <thead className="table-dark">
                   <tr>
                     <th>Nama</th>
-                    <th>Email</th>
+                    {/* <th>Email</th> */}
                     <th>Jabatan</th>
-                    <th>No HP</th>
+                    {/* <th>No HP</th> */}
                     <th>Skill</th>
                     <th>Status</th>
                     <th>Beban</th>
@@ -94,9 +94,9 @@ function Karyawan() {
                     filteredKaryawan.map((item) => (
                       <tr key={item.id_karyawan}>
                         <td>{item.nama_karyawan}</td>
-                        <td>{item.email}</td>
+                        {/* <td>{item.email}</td> */}
                         <td>{item.jabatan}</td>
-                        <td>{item.no_hp}</td>
+                        {/* <td>{item.no_hp}</td> */}
                         <td>{item.skill}</td>
                         <td>
                           <span
@@ -143,7 +143,7 @@ function Karyawan() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" className="text-center">
+                      <td colSpan="6" className="text-center">
                         Tidak ada data
                       </td>
                     </tr>
