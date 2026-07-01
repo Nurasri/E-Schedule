@@ -418,12 +418,16 @@ const updateStatusTugas = async (req, res) => {
       // riwayat_beban
       const [riwayat] = await db.query(
         `
-        SELECT rb.*, k.maksimal_tugas
-        FROM riwayat_beban rb
-        JOIN karyawan k
-          ON rb.id_karyawan = k.id_karyawan
-        WHERE rb.id_karyawan = ?
-        `,
+          SELECT
+          rb.*,
+          k.maksimal_tugas
+          FROM riwayat_beban rb
+          JOIN karyawan k
+          ON rb.id_karyawan=k.id_karyawan
+          WHERE rb.id_karyawan=?
+          ORDER BY rb.id_riwayat_beban DESC
+          LIMIT 1
+          `,
         [req.user.id],
       );
 
@@ -434,7 +438,8 @@ const updateStatusTugas = async (req, res) => {
 
         const tugasSelesaiBaru = data.tugas_selesai + 1;
 
-        const nilaiBebanBaru = (tugasAktifBaru / data.maksimal_tugas) * 100;
+        const nilaiBebanBaru = tugasAktifBaru;
+        // const nilaiBebanBaru = (tugasAktifBaru / data.maksimal_tugas) * 100;
 
         await db.query(
           `
