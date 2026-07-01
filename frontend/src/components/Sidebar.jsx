@@ -47,7 +47,7 @@ function Sidebar() {
         </li>
 
         <li className="nav-item">
-          <Link to="/riwayatbeban" className="nav-link text-white">
+          <Link to="/monitoringkinerja" className="nav-link text-white">
             Monitoring Kinerja
           </Link>
         </li>

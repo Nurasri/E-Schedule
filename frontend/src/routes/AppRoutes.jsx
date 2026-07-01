@@ -17,7 +17,9 @@ import EditTugas from "../pages/EditTugas";
 
 import Jadwal from "../pages/Jadwal";
 
-import RiwayatBeban from "../pages/RiwayatBeban";
+import MonitoringKinerja from "../pages/MonitoringKinerja";
+
+import DetailMonitoring from "../pages/DetailMonitoring";
 
 function AppRoutes() {
   return (
@@ -114,11 +116,22 @@ function AppRoutes() {
         />
 
         <Route
-          path="/riwayatbeban"
+          path="/monitoringkinerja"
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <RiwayatBeban />
+                <MonitoringKinerja />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/monitoringkinerja/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DetailMonitoring />
               </DashboardLayout>
             </ProtectedRoute>
           }
