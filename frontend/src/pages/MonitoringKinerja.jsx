@@ -56,10 +56,61 @@ function MonitoringKinerja() {
 
   const totalPages = Math.ceil(filteredMonitoring.length / itemsPerPage);
 
+  const totalKaryawan = monitoring.length;
+
+  const bebanRendah = monitoring.filter(
+    (item) => Number(item.nilai_beban) <= 2,
+  ).length;
+
+  const bebanSedang = monitoring.filter(
+    (item) => Number(item.nilai_beban) === 3,
+  ).length;
+
+  const bebanTinggi = monitoring.filter(
+    (item) => Number(item.nilai_beban) >= 4,
+  ).length;
+
   return (
     <div className="container-fluid">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3>Monitoring Kinerja</h3>
+      </div>
+      <div className="row mb-4">
+        <div className="col-md-3">
+          <div className="card border-primary shadow-sm">
+            <div className="card-body text-center">
+              <h6>Total Karyawan</h6>
+              <h3>{totalKaryawan}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card border-success shadow-sm">
+            <div className="card-body text-center">
+              <h6>Beban Rendah</h6>
+              <h3>{bebanRendah}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card border-warning shadow-sm">
+            <div className="card-body text-center">
+              <h6>Beban Sedang</h6>
+              <h3>{bebanSedang}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card border-danger shadow-sm">
+            <div className="card-body text-center">
+              <h6>Beban Tinggi</h6>
+              <h3>{bebanTinggi}</h3>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="card shadow-sm">
@@ -103,8 +154,7 @@ function MonitoringKinerja() {
                     <th>Total Tugas</th>
                     <th>Tugas Aktif</th>
                     <th>Tugas Selesai</th>
-                    <th>Nilai Beban</th>
-                    <th>Status Beban</th>
+                    <th>Beban Kerja</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -136,33 +186,19 @@ function MonitoringKinerja() {
                         </td>
 
                         <td>
-                          <span className="badge bg-info">
-                            {item.nilai_beban}
-                          </span>
-                        </td>
-
-                        <td>
-                          {(() => {
-                            const nilaiBeban = Number(item.nilai_beban);
-
-                            if (nilaiBeban >= 4) {
-                              return (
-                                <span className="badge bg-danger">Tinggi</span>
-                              );
-                            }
-
-                            if (nilaiBeban === 3) {
-                              return (
-                                <span className="badge bg-warning text-dark">
-                                  Sedang
-                                </span>
-                              );
-                            }
-
-                            return (
-                              <span className="badge bg-success">Rendah</span>
-                            );
-                          })()}
+                          {Number(item.nilai_beban) <= 2 ? (
+                            <span className="badge bg-success">
+                              Rendah ({item.nilai_beban})
+                            </span>
+                          ) : Number(item.nilai_beban) === 3 ? (
+                            <span className="badge bg-warning text-dark">
+                              Sedang ({item.nilai_beban})
+                            </span>
+                          ) : (
+                            <span className="badge bg-danger">
+                              Tinggi ({item.nilai_beban})
+                            </span>
+                          )}
                         </td>
 
                         <td>

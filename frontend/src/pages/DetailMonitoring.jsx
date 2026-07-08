@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
+import { Link } from "react-router-dom";
 
 function DetailMonitoring() {
   const { id } = useParams();
@@ -29,6 +30,10 @@ function DetailMonitoring() {
 
   const info = data[0];
 
+  const progressKeseluruhan = info
+    ? Math.round((info.tugas_selesai / info.total_tugas) * 100)
+    : 0;
+
   if (loading) {
     return (
       <div className="container-fluid">
@@ -39,6 +44,9 @@ function DetailMonitoring() {
 
   return (
     <div className="container-fluid">
+      <Link to="/monitoringkinerja" className="btn btn-secondary mb-3">
+        ← Kembali
+      </Link>
       {info && (
         <div className="card shadow-sm mb-4">
           <div className="card-body">
@@ -69,6 +77,20 @@ function DetailMonitoring() {
                 <b>Nilai Beban</b>
 
                 <h4>{info.nilai_beban}</h4>
+              </div>
+            </div>
+          </div>
+          <div className="card-body">
+            <h6>Progress Keseluruhan</h6>
+
+            <div className="progress" style={{ height: "25px" }}>
+              <div
+                className="progress-bar bg-success"
+                style={{
+                  width: `${progressKeseluruhan}%`,
+                }}
+              >
+                {progressKeseluruhan}%
               </div>
             </div>
           </div>
