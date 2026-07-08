@@ -8,6 +8,7 @@ const tugasRoutes = require("./routes/tugasRoutes");
 const jadwalRoutes = require("./routes/jadwalRoutes");
 const riwayatBebanRoutes = require("./routes/riwayatBebanRoutes");
 const generateRoutes = require("./routes/generateRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/tugas", tugasRoutes);
 app.use("/jadwal", jadwalRoutes);
 app.use("/riwayat-beban", riwayatBebanRoutes);
 app.use("/jadwal", generateRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.json({
