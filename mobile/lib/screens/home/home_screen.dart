@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/session_services.dart';
 import '../login/login_screen.dart';
+import '../task/tugas_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String nama;
@@ -77,33 +78,17 @@ class HomeScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TugasScreen(),
+                    ),
+                  );
+                },
                 child: const Text("Tugas Saya"),
               ),
             ),
-            // const SizedBox(height: 15),
-            // SizedBox(
-            //   width: double.infinity,
-            //   child: ElevatedButton(
-            //     onPressed: () async {
-            //       await SessionService().logout();
-
-            //       if (context.mounted) {
-            //         Navigator.pushAndRemoveUntil(
-            //           context,
-            //           MaterialPageRoute(
-            //             builder: (_) => const LoginScreen(),
-            //           ),
-            //           (route) => false,
-            //         );
-            //       }
-            //     },
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: Colors.red,
-            //     ),
-            //     child: const Text("Logout"),
-            //   ),
-            // ),
           ],
         ),
       ),
