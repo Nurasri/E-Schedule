@@ -44,11 +44,17 @@ class _TugasScreenState extends State<TugasScreen> {
 
   late Future<List<JadwalModel>> futureTugas;
 
+  void loadTugas() {
+    setState(() {
+      futureTugas = apiService.getTugasSaya();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
 
-    futureTugas = apiService.getTugasSaya();
+    loadTugas();
   }
 
   @override
@@ -87,8 +93,8 @@ class _TugasScreenState extends State<TugasScreen> {
 
               return InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  Navigator.push(
+                onTap: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => DetailTugasScreen(
@@ -96,6 +102,28 @@ class _TugasScreenState extends State<TugasScreen> {
                       ),
                     ),
                   );
+
+                  if (result != null) {
+                    loadTugas();
+
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text("Berhasil"),
+                          content: Text(result),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text("OK"),
+                            )
+                          ],
+                        ),
+                      );
+                    });
+                  }
                 },
                 child: Card(
                   margin: const EdgeInsets.symmetric(

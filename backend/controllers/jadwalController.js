@@ -380,18 +380,30 @@ const updateStatusTugas = async (req, res) => {
       });
     }
 
-    await db.query(
-      `
-        UPDATE jadwal j
-        JOIN tugas t
-        ON j.id_tugas = t.id_tugas
-        SET
-        j.status_tugas = ?,
-        t.catatan_tugas = ?
-        WHERE j.id_jadwal = ?
-        `,
-      [status_tugas, catatan_tugas ?? null, id],
-    );
+    if (catatan_tugas !== undefined) {
+      await db.query(
+        `
+    UPDATE jadwal j
+    JOIN tugas t
+      ON j.id_tugas = t.id_tugas
+    SET
+      j.status_tugas = ?,
+      t.catatan_tugas = ?
+    WHERE j.id_jadwal = ?
+    `,
+        [status_tugas, catatan_tugas, id],
+      );
+    } else {
+      await db.query(
+        `
+    UPDATE jadwal
+    SET
+      status_tugas = ?
+    WHERE id_jadwal = ?
+    `,
+        [status_tugas, id],
+      );
+    }
 
     if (statusLama !== "Selesai" && status_tugas === "Selesai") {
       // Jumlah tugas

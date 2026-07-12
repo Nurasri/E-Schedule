@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../models/jadwal_model.dart';
 import '../../services/api_service.dart';
+import '../../widgets/custom_dialog.dart';
 
 class DetailTugasScreen extends StatefulWidget {
   final JadwalModel tugas;
@@ -26,7 +27,9 @@ String formatTanggal(String tanggal) {
 class _DetailTugasScreenState extends State<DetailTugasScreen> {
   final ApiService apiService = ApiService();
   Future<void> showUpdateStatusDialog(BuildContext context) async {
-    final TextEditingController catatanController = TextEditingController();
+    final TextEditingController catatanController = TextEditingController(
+      text: widget.tugas.catatanTugas,
+    );
 
     String selectedStatus = widget.tugas.statusTugas;
 
@@ -120,23 +123,27 @@ class _DetailTugasScreenState extends State<DetailTugasScreen> {
                           if (!mounted) return;
 
                           if (result["statusCode"] == 200) {
-                            setState(() {
-                              widget.tugas.statusTugas = selectedStatus;
-                              widget.tugas.catatanTugas =
-                                  catatanController.text;
-                            });
+                            widget.tugas.statusTugas = selectedStatus;
+                            widget.tugas.catatanTugas = catatanController.text;
+
+                            // tutup dialog update status
                             Navigator.pop(context);
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(result["data"]["message"]),
-                              ),
+                            // kembali ke halaman daftar
+                            Navigator.pop(
+                              this.context,
+                              result["data"]["message"],
                             );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(result["data"]["message"]),
-                              ),
+                          }
+
+                          if (result["statusCode"] != 200) {
+                            setDialogState(() {
+                              isLoading = false;
+                            });
+
+                            await CustomDialog.error(
+                              context,
+                              result["data"]["message"],
                             );
                           }
                         },
