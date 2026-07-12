@@ -311,8 +311,8 @@ const getMyJadwal = async (req, res) => {
                 t.nama_tugas,
                 t.deskripsi,
                 t.prioritas,
+                t.catatan_tugas,
                 t.deadline,
-                t.durasi,
                 j.tanggal_tugas,
                 j.jam_mulai,
                 j.jam_selesai,
@@ -337,7 +337,7 @@ const getMyJadwal = async (req, res) => {
 const updateStatusTugas = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status_tugas } = req.body;
+    const { status_tugas, catatan_tugas } = req.body;
 
     // hanya karyawan
     if (req.user.role !== "karyawan") {
@@ -366,6 +366,12 @@ const updateStatusTugas = async (req, res) => {
       [id, req.user.id],
     );
 
+    if (jadwal.length === 0) {
+      return res.status(404).json({
+        message: "Jadwal tidak ditemukan atau bukan milik anda",
+      });
+    }
+
     const statusLama = jadwal[0].status_tugas;
 
     if (statusLama === "Selesai" && status_tugas !== "Selesai") {
@@ -374,19 +380,17 @@ const updateStatusTugas = async (req, res) => {
       });
     }
 
-    if (jadwal.length === 0) {
-      return res.status(404).json({
-        message: "Jadwal tidak ditemukan atau bukan milik anda",
-      });
-    }
-
     await db.query(
       `
-            UPDATE jadwal
-            SET status_tugas = ?
-            WHERE id_jadwal = ?
-            `,
-      [status_tugas, id],
+        UPDATE jadwal j
+        JOIN tugas t
+        ON j.id_tugas = t.id_tugas
+        SET
+        j.status_tugas = ?,
+        t.catatan_tugas = ?
+        WHERE j.id_jadwal = ?
+        `,
+      [status_tugas, catatan_tugas ?? null, id],
     );
 
     if (statusLama !== "Selesai" && status_tugas === "Selesai") {
@@ -459,6 +463,7 @@ const updateStatusTugas = async (req, res) => {
     res.json({
       message: "Status tugas berhasil diperbarui",
       status_tugas,
+      catatan_tugas,
     });
   } catch (error) {
     res.status(500).json({
