@@ -9,7 +9,7 @@ class CustomDialog {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: const Text("Berhasil"),
+        title: const Text("Success"),
         content: Text(message),
         actions: [
           TextButton(

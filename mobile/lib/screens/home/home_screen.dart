@@ -5,13 +5,16 @@ import '../../services/api_service.dart';
 import '../../services/session_services.dart';
 import '../login/login_screen.dart';
 import '../task/tugas_screen.dart';
+import '../../widgets/custom_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   final String nama;
+  final bool tampilkanWelcome;
 
   const HomeScreen({
     super.key,
     required this.nama,
+    this.tampilkanWelcome = false,
   });
 
   @override
@@ -27,6 +30,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     futureTugas = apiService.getTugasSaya();
+
+    if (widget.tampilkanWelcome) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await CustomDialog.success(
+          context,
+          "Selamat Datang ${widget.nama}",
+        );
+      });
+    }
   }
 
   int jumlahStatus(List<JadwalModel> data, String status) {
@@ -178,9 +190,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    "Selamat Datang",
+                    "Jadwal Karyawan",
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 23,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

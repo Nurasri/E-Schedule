@@ -75,6 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(
           builder: (_) => HomeScreen(
             nama: result["data"]["nama"],
+            tampilkanWelcome: true,
           ),
         ),
       );

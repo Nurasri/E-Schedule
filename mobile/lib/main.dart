@@ -53,6 +53,7 @@ class CheckLogin extends StatelessWidget {
         if (token != null) {
           return HomeScreen(
             nama: nama ?? "",
+            tampilkanWelcome: false,
           );
         }
 
