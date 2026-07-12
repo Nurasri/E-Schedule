@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/api_service.dart';
+import '../home/home_screen.dart';
+import '../../services/session_services.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  final sessionService = SessionService();
 
   @override
   void dispose() {
@@ -30,14 +35,47 @@ class _LoginScreenState extends State<LoginScreen> {
       passwordController.text.trim(),
     );
 
-    print(result);
+    // print("Status : ${result["statusCode"]}");
+    // print("Body   : ${result["data"]}");
 
     if (!mounted) return;
 
     if (result["statusCode"] == 200) {
+      await sessionService.saveLogin(
+        token: result["data"]["token"],
+        role: result["data"]["role"],
+        nama: result["data"]["nama"],
+      );
+      // final prefs = await SharedPreferences.getInstance();
+
+      // await prefs.setString(
+      //   "token",
+      //   result["data"]["token"],
+      // );
+
+      // await prefs.setString(
+      //   "role",
+      //   result["data"]["role"],
+      // );
+
+      // await prefs.setString(
+      //   "nama",
+      //   result["data"]["nama"],
+      // );
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Login Berhasil"),
+        ),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HomeScreen(
+            nama: result["data"]["nama"],
+          ),
         ),
       );
     } else {
