@@ -40,6 +40,10 @@ class _DetailTugasScreenState extends State<DetailTugasScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
               title: const Text("Perbarui Status"),
               content: SingleChildScrollView(
                 child: Column(
