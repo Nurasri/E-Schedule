@@ -4,11 +4,12 @@ class JadwalModel {
   final String deskripsi;
   final String prioritas;
   final String deadline;
-  final String durasi;
+  // final String durasi;
   final String tanggalTugas;
   final String jamMulai;
   final String jamSelesai;
-  final String statusTugas;
+  String statusTugas;
+  String catatanTugas;
 
   JadwalModel({
     required this.idJadwal,
@@ -16,11 +17,12 @@ class JadwalModel {
     required this.deskripsi,
     required this.prioritas,
     required this.deadline,
-    required this.durasi,
+    // required this.durasi,
     required this.tanggalTugas,
     required this.jamMulai,
     required this.jamSelesai,
     required this.statusTugas,
+    required this.catatanTugas,
   });
 
   factory JadwalModel.fromJson(Map<String, dynamic> json) {
@@ -30,11 +32,12 @@ class JadwalModel {
       deskripsi: json["deskripsi"],
       prioritas: json["prioritas"],
       deadline: json["deadline"],
-      durasi: json["durasi"],
+      // durasi: json["durasi"],
       tanggalTugas: json["tanggal_tugas"],
       jamMulai: json["jam_mulai"],
       jamSelesai: json["jam_selesai"],
       statusTugas: json["status_tugas"],
+      catatanTugas: json["catatan_tugas"] ?? "",
     );
   }
 }

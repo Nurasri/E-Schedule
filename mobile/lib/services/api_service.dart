@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../models/jadwal_model.dart';
 import 'session_services.dart';
 
@@ -48,5 +50,30 @@ class ApiService {
     }
 
     throw Exception("Gagal mengambil data tugas");
+  }
+
+  Future<Map<String, dynamic>> updateStatus({
+    required int idJadwal,
+    required String status,
+    String? catatan,
+  }) async {
+    final token = await SessionService().getToken();
+
+    final response = await http.patch(
+      Uri.parse("$baseUrl/jadwal/$idJadwal/status"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({
+        "status_tugas": status,
+        if (catatan != null && catatan.isNotEmpty) "catatan_tugas": catatan,
+      }),
+    );
+
+    return {
+      "statusCode": response.statusCode,
+      "data": jsonDecode(response.body),
+    };
   }
 }
