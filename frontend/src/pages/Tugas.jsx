@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 import api from "../api/axios";
 
 function Tugas() {
   const [tugas, setTugas] = useState([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 10;
 
   const fetchTugas = async () => {
     try {
       const response = await api.get("/tugas");
-
       setTugas(response.data);
     } catch (error) {
       console.error(error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal mengambil data tugas",
+      });
     }
   };
 
@@ -21,30 +30,45 @@ function Tugas() {
   }, []);
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Yakin ingin menghapus tugas ini?");
+    const result = await Swal.fire({
+      title: "Hapus Tugas?",
+      text: "Data yang dihapus tidak dapat dikembalikan.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Hapus",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#6c757d",
+    });
 
-    if (!confirmDelete) return;
+    if (!result.isConfirmed) return;
 
     try {
       await api.delete(`/tugas/${id}`);
 
-      alert("Tugas berhasil dihapus");
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Data tugas berhasil dihapus.",
+        timer: 1800,
+        showConfirmButton: false,
+      });
 
       fetchTugas();
     } catch (error) {
       console.error(error);
 
-      alert("Gagal menghapus tugas");
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal menghapus tugas.",
+      });
     }
   };
 
   const filteredTugas = tugas.filter((item) =>
     item.nama_tugas.toLowerCase().includes(search.toLowerCase()),
   );
-
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const itemsPerPage = 10;
 
   const indexOfLastItem = currentPage * itemsPerPage;
 
@@ -54,62 +78,103 @@ function Tugas() {
 
   const totalPages = Math.ceil(filteredTugas.length / itemsPerPage);
 
+  const formatTanggal = (tanggal) => {
+    if (!tanggal) return "-";
+
+    const date = new Date(tanggal);
+
+    const hari = String(date.getDate()).padStart(2, "0");
+    const bulan = String(date.getMonth() + 1).padStart(2, "0");
+    const tahun = date.getFullYear();
+
+    return `${hari}-${bulan}-${tahun}`;
+  };
+
   return (
     <div className="container-fluid">
-      {" "}
-      <div className="card shadow-sm">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h4>Data Tugas</h4>
+      <div className="card shadow-sm border-0">
+        <div className="card-header bg-white d-flex justify-content-between align-items-center">
+          <div>
+            <h4 className="mb-0 fw-bold">Data Tugas</h4>
+            <small className="text-muted">
+              Kelola seluruh data tugas perusahaan
+            </small>
+          </div>
 
-          <Link to="/tugas/tambah" className="btn btn-primary">
+          <Link to="/tugas/tambah" className="btn btn-dark">
             + Tambah Tugas
           </Link>
         </div>
 
         <div className="card-body">
-          <div className="row mb-3">
+          <div className="row mb-4">
             <div className="col-md-4">
               <input
                 type="text"
                 className="form-control"
-                placeholder="Cari tugas..."
+                placeholder="Cari nama tugas..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
             </div>
           </div>
 
           <div className="table-responsive">
-            <table className="table table-bordered table-hover">
-              <thead className="table-dark">
+            <table className="table table-hover align-middle">
+              <thead className="table-light">
                 <tr>
-                  <th>No.</th>
+                  <th width="70">No</th>
                   <th>Nama Tugas</th>
                   <th>Deskripsi</th>
-                  <th>Prioritas</th>
-                  <th>Deadline</th>
-                  <th>Aksi</th>
+                  <th width="120">Prioritas</th>
+                  <th width="130">Deadline</th>
+                  <th width="150" className="text-center">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
-                {filteredTugas.length > 0 ? (
+                {currentTugas.length > 0 ? (
                   currentTugas.map((item, index) => (
                     <tr key={item.id_tugas}>
                       <td>{indexOfFirstItem + index + 1}</td>
-                      <td>{item.nama_tugas}</td>
-                      <td title={item.deskripsi}>
-                        {item.deskripsi.length > 50
-                          ? item.deskripsi.slice(0, 50) + "..."
+
+                      <td className="fw-semibold">{item.nama_tugas}</td>
+
+                      <td
+                        style={{
+                          maxWidth: "350px",
+                        }}
+                      >
+                        {item.deskripsi.length > 70
+                          ? item.deskripsi.substring(0, 70) + "..."
                           : item.deskripsi}
                       </td>
-                      <td>{item.prioritas}</td>
-                      {/* <td>{item.skill_dibutuhkan}</td> */}
-                      <td>{item.deadline}</td>
-                      {/* <td>{item.durasi}</td> */}
 
                       <td>
-                        <div className="d-flex gap-2">
+                        {item.prioritas === "Tinggi" && (
+                          <span className="badge bg-danger">Tinggi</span>
+                        )}
+
+                        {item.prioritas === "Sedang" && (
+                          <span className="badge bg-warning text-dark">
+                            Sedang
+                          </span>
+                        )}
+
+                        {item.prioritas === "Rendah" && (
+                          <span className="badge bg-success">Rendah</span>
+                        )}
+                      </td>
+
+                      <td>{formatTanggal(item.deadline)}</td>
+
+                      <td>
+                        <div className="d-flex justify-content-center gap-2">
                           <Link
                             to={`/tugas/edit/${item.id_tugas}`}
                             className="btn btn-warning btn-sm"
@@ -118,7 +183,7 @@ function Tugas() {
                           </Link>
 
                           <button
-                            className="btn btn-danger btn-sm"
+                            className="btn btn-danger btn-sm "
                             onClick={() => handleDelete(item.id_tugas)}
                           >
                             Hapus
@@ -129,14 +194,17 @@ function Tugas() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">
-                      Tidak ada data
+                    <td colSpan="6" className="text-center py-4">
+                      Tidak ada data tugas.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
-            <nav>
+          </div>
+
+          {totalPages > 1 && (
+            <nav className="mt-4">
               <ul className="pagination justify-content-end">
                 <li
                   className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
@@ -179,7 +247,7 @@ function Tugas() {
                 </li>
               </ul>
             </nav>
-          </div>
+          )}
         </div>
       </div>
     </div>

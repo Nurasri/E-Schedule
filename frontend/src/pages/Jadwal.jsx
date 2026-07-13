@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import * as bootstrap from "bootstrap";
+import Swal from "sweetalert2";
 
 function Jadwal() {
   const [jadwal, setJadwal] = useState([]);
@@ -44,34 +45,92 @@ function Jadwal() {
   };
 
   const handleGenerate = async () => {
-    const confirmGenerate = window.confirm("Generate jadwal sekarang?");
+    const result = await Swal.fire({
+      title: "Generate Jadwal?",
+      text: "Sistem akan mendistribusikan seluruh tugas secara otomatis.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#198754",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Generate",
+      cancelButtonText: "Batal",
+    });
 
-    if (!confirmGenerate) return;
+    if (!result.isConfirmed) return;
+
+    Swal.fire({
+      title: "Sedang Generate...",
+      text: "Mohon tunggu beberapa saat",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
     try {
       await api.post("/jadwal/generate");
 
-      alert("Generate jadwal berhasil");
+      await loadData();
 
-      loadData();
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Generate jadwal berhasil.",
+        timer: 1800,
+        showConfirmButton: false,
+      });
     } catch (error) {
-      alert(error.response?.data?.message || "Generate gagal");
+      Swal.fire({
+        icon: "error",
+        title: "Generate Gagal",
+        text:
+          error.response?.data?.message ||
+          "Terjadi kesalahan saat generate jadwal.",
+      });
     }
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Hapus jadwal ini?");
+    const result = await Swal.fire({
+      title: "Hapus Jadwal?",
+      text: "Data yang dihapus tidak dapat dikembalikan.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Hapus",
+      cancelButtonText: "Batal",
+    });
 
-    if (!confirmDelete) return;
+    if (!result.isConfirmed) return;
+
+    Swal.fire({
+      title: "Menghapus...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
     try {
       await api.delete(`/jadwal/${id}`);
 
-      alert("Jadwal berhasil dihapus");
+      await loadData();
 
-      loadData();
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Jadwal berhasil dihapus.",
+        timer: 1800,
+        showConfirmButton: false,
+      });
     } catch (error) {
-      alert(error.response?.data?.message || "Gagal menghapus");
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: error.response?.data?.message || "Gagal menghapus jadwal.",
+      });
     }
   };
 
@@ -85,8 +144,35 @@ function Jadwal() {
 
       modal.show();
     } catch (error) {
-      alert(error.response?.data?.message || "Gagal mengambil detail");
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: error.response?.data?.message || "Gagal mengambil detail jadwal.",
+      });
     }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "Selesai":
+        return "success";
+
+      case "Proses":
+        return "warning";
+
+      case "Belum Dikerjakan":
+        return "secondary";
+
+      case "Tertunda":
+        return "danger";
+
+      default:
+        return "primary";
+    }
+  };
+
+  const getValidasiBadge = (status) => {
+    return status === "Valid" ? "success" : "danger";
   };
 
   const filteredData = jadwal.filter(
@@ -103,11 +189,29 @@ function Jadwal() {
 
   const totalPages = Math.ceil(filteredData.length / dataPerPage);
 
+  const formatTanggal = (tanggal) => {
+    if (!tanggal) return "-";
+
+    const date = new Date(tanggal);
+
+    const hari = String(date.getDate()).padStart(2, "0");
+    const bulan = String(date.getMonth() + 1).padStart(2, "0");
+    const tahun = date.getFullYear();
+
+    return `${hari}-${bulan}-${tahun}`;
+  };
+
+  const formatJam = (jam) => {
+    if (!jam) return "-";
+
+    return jam.substring(0, 5);
+  };
+
   return (
     <div className="container-fluid">
       <h3 className="mb-4">Jadwal Distribusi Tugas</h3>
 
-      <div className="row mb-4">
+      <div className="row g-4 mb-4">
         <div className="col-md-6">
           <div className="card border-success shadow-sm">
             <div className="card-body">
@@ -131,31 +235,38 @@ function Jadwal() {
 
       <div className="card shadow-sm">
         <div className="card-body">
-          <div className="d-flex justify-content-between mb-3">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <button className="btn btn-success" onClick={handleGenerate}>
               Generate Jadwal
             </button>
 
             <input
               type="text"
-              className="form-control w-25"
-              placeholder="Cari nama karyawan dan tugas..."
+              className="form-control"
+              style={{ maxWidth: "320px" }}
+              placeholder="Cari nama karyawan atau tugas..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
 
           <div className="table-responsive">
-            <table className="table table-bordered table-hover text-center">
-              <thead className="table-dark">
-                <tr>
-                  <th>No</th>
-                  <th>Nama Karyawan</th>
-                  <th>Tugas</th>
-                  <th>Tanggal</th>
-                  <th>Waktu Pengerjaan/Hari</th>
-                  <th>Status</th>
-                  <th>Aksi</th>
+            <table className="table table-hover align-middle">
+              <thead className="table-light">
+                <tr className="align-middle">
+                  <th style={{ width: "55px" }}>No</th>
+
+                  <th style={{ width: "130px" }}>Nama Karyawan</th>
+
+                  <th style={{ width: "330px" }}>Nama Tugas</th>
+
+                  <th style={{ width: "120px" }}>Tanggal</th>
+
+                  <th style={{ width: "120px" }}>Jam</th>
+
+                  <th style={{ width: "110px" }}>Status</th>
+
+                  <th style={{ width: "160px" }}>Aksi</th>
                 </tr>
               </thead>
 
@@ -164,33 +275,41 @@ function Jadwal() {
                   <tr key={item.id_jadwal}>
                     <td>{firstIndex + index + 1}</td>
 
-                    <td>{item.nama_karyawan}</td>
+                    <td className="fw-semibold">{item.nama_karyawan}</td>
 
                     <td>{item.nama_tugas}</td>
 
-                    <td>{item.tanggal_tugas?.split("T")[0]}</td>
+                    <td>{formatTanggal(item.tanggal_tugas)}</td>
 
                     <td>
-                      {item.jam_mulai} - {item.jam_selesai}
+                      {formatJam(item.jam_mulai)} -{" "}
+                      {formatJam(item.jam_selesai)}
                     </td>
 
-                    {/* <td>{item.jam_selesai}</td> */}
-
-                    <td>{item.status_tugas}</td>
+                    <td>
+                      <span
+                        className={`badge bg-${getStatusBadge(item.status_tugas)}`}
+                      >
+                        {item.status_tugas}
+                      </span>
+                    </td>
 
                     <td>
-                      <button
-                        className="btn btn-info btn-sm me-2"
-                        onClick={() => handleDetail(item.id_jadwal)}
-                      >
-                        Detail
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(item.id_jadwal)}
-                      >
-                        Hapus
-                      </button>
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-outline-primary btn-sm"
+                          onClick={() => handleDetail(item.id_jadwal)}
+                        >
+                          Detail
+                        </button>
+
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => handleDelete(item.id_jadwal)}
+                        >
+                          Hapus
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -252,49 +371,73 @@ function Jadwal() {
 
             <div className="modal-body">
               {detailJadwal && (
-                <table className="table table-borderless">
-                  <tbody>
-                    <tr>
-                      <th>Nama Karyawan</th>
-                      <td>{detailJadwal.nama_karyawan}</td>
-                    </tr>
+                <>
+                  <div className="text-center mb-4">
+                    <h5 className="fw-bold">{detailJadwal.nama_tugas}</h5>
 
-                    <tr>
-                      <th>Nama Tugas</th>
-                      <td>{detailJadwal.nama_tugas}</td>
-                    </tr>
+                    <p className="text-muted">{detailJadwal.nama_karyawan}</p>
+                  </div>
 
-                    <tr>
-                      <th>Tanggal</th>
-                      <td>{detailJadwal.tanggal_tugas?.split("T")[0]}</td>
-                    </tr>
+                  <div className="row g-3">
+                    <div className="col-6">
+                      <div className="border rounded p-3">
+                        <small className="text-muted">Tanggal Mulai</small>
 
-                    <tr>
-                      <th>Jam Mulai</th>
-                      <td>{detailJadwal.jam_mulai}</td>
-                    </tr>
+                        <h6 className="mt-2">
+                          {detailJadwal.tanggal_tugas?.split("T")[0]}
+                        </h6>
+                      </div>
+                    </div>
 
-                    <tr>
-                      <th>Jam Selesai</th>
-                      <td>{detailJadwal.jam_selesai}</td>
-                    </tr>
+                    <div className="col-6">
+                      <div className="border rounded p-3">
+                        <small className="text-muted">Jam Kerja</small>
 
-                    <tr>
-                      <th>Status</th>
-                      <td>{detailJadwal.status_tugas}</td>
-                    </tr>
+                        <h6 className="mt-2">
+                          {detailJadwal.jam_mulai} - {detailJadwal.jam_selesai}
+                        </h6>
+                      </div>
+                    </div>
 
-                    <tr>
-                      <th>Score Greedy</th>
-                      <td>{detailJadwal.score_greedy}</td>
-                    </tr>
+                    <div className="col-6">
+                      <div className="border rounded p-3">
+                        <small className="text-muted">Status</small>
 
-                    <tr>
-                      <th>Validasi</th>
-                      <td>{detailJadwal.hasil_validasi}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                        <div className="mt-2">
+                          <span
+                            className={`badge bg-${getStatusBadge(detailJadwal.status_tugas)}`}
+                          >
+                            {detailJadwal.status_tugas}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-6">
+                      <div className="border rounded p-3">
+                        <small className="text-muted">Validasi</small>
+
+                        <div className="mt-2">
+                          <span
+                            className={`badge bg-${getValidasiBadge(detailJadwal.hasil_validasi)}`}
+                          >
+                            {detailJadwal.hasil_validasi}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-12">
+                      <div className="border rounded p-3">
+                        <small className="text-muted">Score Greedy</small>
+
+                        <h4 className="mt-2 text-success">
+                          {detailJadwal.score_greedy}
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>

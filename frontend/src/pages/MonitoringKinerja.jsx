@@ -146,8 +146,8 @@ function MonitoringKinerja() {
             <p>Memuat data...</p>
           ) : (
             <div className="table-responsive">
-              <table className="table table-bordered table-hover">
-                <thead className="table-dark">
+              <table className="table table-hover align-middle">
+                <thead className="table-light">
                   <tr>
                     <th>No</th>
                     <th>Nama Karyawan</th>
@@ -204,7 +204,7 @@ function MonitoringKinerja() {
                         <td>
                           <Link
                             to={`/monitoringkinerja/${item.id_karyawan}`}
-                            className="btn btn-primary btn-sm"
+                            className="btn btn-outline-primary btn-sm"
                           >
                             Detail
                           </Link>
@@ -220,25 +220,6 @@ function MonitoringKinerja() {
                   )}
                 </tbody>
               </table>
-              {/* <nav className="mt-3">
-                <ul className="pagination justify-content-end">
-                  {[...Array(totalPages)].map((_, index) => (
-                    <li
-                      key={index}
-                      className={`page-item ${
-                        currentPage === index + 1 ? "active" : ""
-                      }`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => setCurrentPage(index + 1)}
-                      >
-                        {index + 1}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </nav> */}
             </div>
           )}
         </div>

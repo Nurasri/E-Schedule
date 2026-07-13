@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import api from "../api/axios";
 
 function TambahTugas() {
@@ -27,120 +28,138 @@ function TambahTugas() {
     try {
       await api.post("/tugas", formData);
 
-      alert("Tugas berhasil ditambahkan");
+      await Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Data tugas berhasil ditambahkan.",
+        confirmButtonColor: "#212529",
+      });
 
       navigate("/tugas");
     } catch (error) {
-      console.error(error);
-
-      alert(error.response?.data?.message || "Gagal menambahkan tugas");
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: error.response?.data?.message || "Gagal menambahkan tugas.",
+        confirmButtonColor: "#212529",
+      });
     }
   };
 
   return (
     <div className="container-fluid">
-      {" "}
-      <div className="card shadow-sm">
-        {" "}
-        <div className="card-header">
-          {" "}
-          <h4>Tambah Tugas</h4>{" "}
+      <div className="card shadow-sm border-0">
+        <div className="card-header bg-white border-bottom">
+          <h4 className="fw-bold mb-0">Tambah Tugas</h4>
+          <small className="text-muted">Tambah tugas karyawan</small>
         </div>
+
         <div className="card-body">
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label">Nama Tugas</label>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label fw-semibold">Nama Tugas</label>
 
-              <input
-                type="text"
-                name="nama_tugas"
-                className="form-control"
-                value={formData.nama_tugas}
-                onChange={handleChange}
-                required
-              />
+                <input
+                  type="text"
+                  name="nama_tugas"
+                  className="form-control"
+                  value={formData.nama_tugas}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label className="form-label fw-semibold">Prioritas</label>
+
+                <select
+                  name="prioritas"
+                  className="form-select"
+                  value={formData.prioritas}
+                  onChange={handleChange}
+                >
+                  <option value="Tinggi">Tinggi</option>
+                  <option value="Sedang">Sedang</option>
+                  <option value="Rendah">Rendah</option>
+                </select>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label className="form-label fw-semibold">
+                  Skill Dibutuhkan
+                </label>
+
+                <input
+                  type="text"
+                  name="skill_dibutuhkan"
+                  className="form-control"
+                  value={formData.skill_dibutuhkan}
+                  onChange={handleChange}
+                  placeholder="Contoh : Administrasi, Audit, Excel"
+                  required
+                />
+              </div>
+
+              <div className="col-md-3 mb-3">
+                <label className="form-label fw-semibold">Deadline</label>
+
+                <input
+                  type="date"
+                  name="deadline"
+                  className="form-control"
+                  value={formData.deadline}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="col-md-3 mb-3">
+                <label className="form-label fw-semibold">Durasi</label>
+
+                <input
+                  type="text"
+                  name="durasi"
+                  className="form-control"
+                  value={formData.durasi}
+                  onChange={handleChange}
+                  placeholder="Contoh : 4 Jam"
+                  required
+                />
+              </div>
+
+              <div className="col-12 mb-4">
+                <label className="form-label fw-semibold">Deskripsi</label>
+
+                <textarea
+                  name="deskripsi"
+                  rows="5"
+                  className="form-control"
+                  value={formData.deskripsi}
+                  onChange={handleChange}
+                  placeholder="Masukkan deskripsi tugas..."
+                  required
+                />
+              </div>
             </div>
 
-            <div className="mb-3">
-              <label className="form-label">Deskripsi</label>
+            <hr />
 
-              <textarea
-                name="deskripsi"
-                className="form-control"
-                rows="3"
-                value={formData.deskripsi}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Prioritas</label>
-
-              <select
-                name="prioritas"
-                className="form-select"
-                value={formData.prioritas}
-                onChange={handleChange}
+            <div className="d-flex justify-content-end gap-2">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => navigate("/tugas")}
               >
-                <option value="Tinggi">Tinggi</option>
-                <option value="Sedang">Sedang</option>
-                <option value="Rendah">Rendah</option>
-              </select>
+                <i className="bi bi-arrow-left me-2"></i>
+                Kembali
+              </button>
+
+              <button type="submit" className="btn btn-dark">
+                <i className="bi bi-check-circle me-2"></i>
+                Simpan
+              </button>
             </div>
-
-            <div className="mb-3">
-              <label className="form-label">Skill Dibutuhkan</label>
-
-              <input
-                type="text"
-                name="skill_dibutuhkan"
-                className="form-control"
-                value={formData.skill_dibutuhkan}
-                onChange={handleChange}
-                placeholder="Contoh: Audit, Administrasi"
-                required
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Deadline</label>
-
-              <input
-                type="date"
-                name="deadline"
-                className="form-control"
-                value={formData.deadline}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label">Durasi</label>
-
-              <input
-                type="text"
-                name="durasi"
-                className="form-control"
-                value={formData.durasi}
-                onChange={handleChange}
-                placeholder="Contoh: 4 Jam"
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn btn-primary me-2">
-              Simpan
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => navigate("/tugas")}
-            >
-              Kembali
-            </button>
           </form>
         </div>
       </div>

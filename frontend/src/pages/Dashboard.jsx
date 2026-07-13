@@ -87,9 +87,7 @@ function Dashboard() {
   };
 
   return (
-    <div className="container-fluid">
-      <h3 className="mb-4">Dashboard Admin</h3>
-
+    <div className="container-fluid py-3">
       <div className="row">
         <div className="col-md-3 mb-3">
           <div className="card shadow-sm border-0">
@@ -141,9 +139,9 @@ function Dashboard() {
       </div>
       <div className="row mt-4">
         <div className="col-md-6">
-          <div className="card shadow-sm">
+          <div className="card shadow-sm rounded-4">
             <div className="card-body">
-              <h5 className="mb-3">Status Tugas</h5>
+              <h5 className="mb-3">Distribusi Status Seluruh Tugas.</h5>
 
               <div
                 style={{
@@ -160,9 +158,9 @@ function Dashboard() {
         </div>
 
         <div className="col-md-6">
-          <div className="card shadow-sm">
+          <div className="card shadow-sm rounded-4">
             <div className="card-body">
-              <h5 className="mb-3">Beban Kerja</h5>
+              <h5 className="mb-3">Distribusi Beban Kerja Karyawan</h5>
               <div
                 style={{
                   height: "300px",
@@ -183,7 +181,7 @@ function Dashboard() {
 
           <div className="table-responsive">
             <table className="table table-hover table-bordered align-middle">
-              <thead className="table-dark">
+              <thead className="table-light">
                 <tr>
                   <th style={{ width: "70px" }}>Peringkat</th>
                   <th>Nama Karyawan</th>

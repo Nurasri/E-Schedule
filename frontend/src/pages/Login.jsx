@@ -6,6 +6,8 @@ import api from "../api/axios";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+import Swal from "sweetalert2";
+
 function Login() {
   const navigate = useNavigate();
 
@@ -31,13 +33,42 @@ function Login() {
 
       const response = await api.post("/auth/login", form);
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.role);
-      localStorage.setItem("nama", response.data.nama);
+      const { token, role, nama } = response.data;
+
+      // hanya admin yang boleh masuk
+      if (role !== "admin") {
+        await Swal.fire({
+          icon: "error",
+          title: "Akses Ditolak",
+          text: "Hanya Admin yang dapat mengakses website ini.",
+          confirmButtonColor: "#0d6efd",
+        });
+
+        return;
+      }
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("nama", nama);
+
+      await Swal.fire({
+        icon: "success",
+        title: "Login Berhasil",
+        text: "Selamat datang Admin",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+
+      navigate("/dashboard");
 
       navigate("/dashboard");
     } catch (error) {
-      alert(error.response?.data?.message || "Login gagal");
+      Swal.fire({
+        icon: "error",
+        title: "Login Gagal",
+        text: error.response?.data?.message || "Login gagal",
+        confirmButtonColor: "#0d6efd",
+      });
     } finally {
       setLoading(false);
     }
@@ -61,17 +92,17 @@ function Login() {
         <div className="card-body p-5">
           <div className="text-center mb-5">
             <div
-              className="mx-auto d-flex justify-content-center align-items-center shadow"
+              className="mx-auto d-flex justify-content-center align-items-center shadow-lg"
               style={{
                 width: "100px",
                 height: "100px",
-                borderRadius: "24px",
-                background: "linear-gradient(135deg,#0d6efd,#4f8cff)",
+                borderRadius: "20px",
+                background: "#f4f6f9",
               }}
             >
               <div className="position-relative">
                 <i
-                  className="bi bi-calendar2-week-fill"
+                  className="bi bi-calendar2-week-fill text-dark"
                   style={{
                     fontSize: "48px",
                     color: "white",
@@ -79,7 +110,7 @@ function Login() {
                 ></i>
 
                 <i
-                  className="bi bi-check-circle-fill position-absolute"
+                  className="bi bi-check-circle-fill position-absolute text-dark"
                   style={{
                     fontSize: "18px",
                     color: "#22c55e",
@@ -104,7 +135,7 @@ function Login() {
               <input
                 type="email"
                 name="email"
-                className="form-control py-3"
+                className="form-control form-control-lg"
                 placeholder="Masukkan email"
                 value={form.email}
                 onChange={handleChange}
@@ -118,7 +149,7 @@ function Login() {
               <input
                 type="password"
                 name="password"
-                className="form-control py-3"
+                className="form-control form-control-lg"
                 placeholder="Masukkan password"
                 value={form.password}
                 onChange={handleChange}
@@ -127,7 +158,7 @@ function Login() {
             </div>
 
             <button
-              className="btn btn-primary btn-lg w-100 py-3 fw-semibold"
+              className="btn btn-dark btn-lg w-100 py-3 fw-semibold"
               disabled={loading}
             >
               {loading ? (
