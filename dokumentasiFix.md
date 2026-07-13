@@ -209,7 +209,7 @@ http://localhost:5173
 Masuk ke folder
 
 ```bash
-cd frontend-mobile
+cd mobile
 ```
 
 Install package
