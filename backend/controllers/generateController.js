@@ -58,7 +58,7 @@ async function generateSchedule(req, res) {
     return res.status(200).json({
       success: true,
       algoritma: "Greedy + Backtracking",
-      message: "Generate jadwal berhasil",
+      message: "Proses generate jadwal berhasil",
       total_tugas: hasil.total_tugas,
       berhasil: hasil.berhasil,
       gagal: hasil.gagal,

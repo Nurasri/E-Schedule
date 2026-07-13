@@ -69,17 +69,77 @@ function Jadwal() {
     });
 
     try {
-      await api.post("/jadwal/generate");
+      const response = await api.post("/jadwal/generate");
 
       await loadData();
 
-      Swal.fire({
-        icon: "success",
-        title: "Berhasil",
-        text: "Generate jadwal berhasil.",
-        timer: 1800,
-        showConfirmButton: false,
-      });
+      const { berhasil, gagal, total_tugas } = response.data;
+
+      // ===============================
+      // Semua tugas berhasil
+      // ===============================
+      if (gagal === 0) {
+        Swal.fire({
+          icon: "success",
+          title: "Generate Berhasil",
+          html: `
+      <div style="text-align:center">
+        <p> <b>${berhasil}</b> dari <b>${total_tugas}</b> tugas berhasil dijadwalkan.</p>
+      </div>
+    `,
+          confirmButtonColor: "#198754",
+        });
+      }
+
+      // ===============================
+      // Sebagian berhasil
+      // ===============================
+      else if (berhasil > 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Generate Selesai",
+          html: `
+      <div style="text-align:left">
+
+        <p>
+          ✅ <b>${berhasil}</b> tugas berhasil dijadwalkan.
+        </p>
+
+        <p>
+          ⚠️ <b>${gagal}</b> tugas belum dapat dijadwalkan.
+        </p>
+
+        <hr>
+
+        <small>
+          Penyebab yang mungkin terjadi:
+          <ul style="margin-top:8px;text-align:left">
+            <li>Skill karyawan tidak sesuai dengan kebutuhan tugas.</li>
+            <li>Karyawan yang sesuai telah mencapai batas maksimal tugas.</li>
+            <li>Tidak tersedia kombinasi penjadwalan yang valid.</li>
+          </ul>
+        </small>
+
+      </div>
+    `,
+          confirmButtonColor: "#f0ad4e",
+        });
+      }
+
+      // ===============================
+      // Tidak ada yang berhasil
+      // ===============================
+      else {
+        Swal.fire({
+          icon: "error",
+          title: "Generate Gagal",
+          html: `
+      Tidak ada tugas yang dapat dijadwalkan.<br><br>
+      Periksa kembali data karyawan, skill, deadline, dan kapasitas kerja.
+    `,
+          confirmButtonColor: "#dc3545",
+        });
+      }
     } catch (error) {
       Swal.fire({
         icon: "error",

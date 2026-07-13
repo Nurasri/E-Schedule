@@ -162,7 +162,9 @@ function DetailMonitoring() {
 
                   <th style={{ minWidth: "180px" }}>Nama Tugas</th>
 
-                  <th style={{ minWidth: "140px" }}>Tanggal</th>
+                  <th style={{ minWidth: "140px" }}>Tanggal Mulai</th>
+
+                  <th style={{ minWidth: "140px" }}>Deadline</th>
 
                   <th style={{ minWidth: "180px" }}>Progress</th>
 
@@ -180,6 +182,8 @@ function DetailMonitoring() {
                     <td className="fw-semibold">{item.nama_tugas}</td>
 
                     <td>{formatTanggal(item.tanggal_tugas)}</td>
+
+                    <td>{formatTanggal(item.deadline)}</td>
 
                     <td>
                       <div className="d-flex align-items-center">

@@ -61,6 +61,7 @@ const getRiwayatBebanById = async (req, res) => {
 
           t.id_tugas,
           t.nama_tugas,
+          t.deadline,
 
           j.tanggal_tugas,
           j.jam_mulai,
